@@ -1,13 +1,15 @@
-import { createServer, createConnection } from 'net';
-import { createDuplexEncrypter } from './encrypt';
-import { pipeline } from 'stream';
-import { readConfig } from './readconfig';
-const config = readConfig();
-const encrypter = createDuplexEncrypter(config.password);
-const server = createServer(socket => {
-    const conn = createConnection(config.server_port, config.server_addr);
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const net_1 = require("net");
+const encrypt_1 = require("./encrypt");
+const stream_1 = require("stream");
+const readconfig_1 = require("./readconfig");
+const config = readconfig_1.readConfig();
+const encrypter = encrypt_1.createDuplexEncrypter(config.password);
+const server = net_1.createServer(socket => {
+    const conn = net_1.createConnection(config.server_port, config.server_addr);
     encrypter(conn);
-    pipeline(conn, socket, conn, err => {
+    stream_1.pipeline(conn, socket, conn, err => {
         if (err) {
             console.error('Something went wrong: ', err);
         }

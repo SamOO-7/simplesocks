@@ -1,4 +1,6 @@
-export function createDuplexEncrypter(passBase64) {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+function createDuplexEncrypter(passBase64) {
     const pass = Array.from(Buffer.from(passBase64, 'base64'));
     const invertedPass = [];
     for (let i = 0; i < 256; i++) {
@@ -23,3 +25,4 @@ export function createDuplexEncrypter(passBase64) {
         };
     };
 }
+exports.createDuplexEncrypter = createDuplexEncrypter;

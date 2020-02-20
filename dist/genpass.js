@@ -1,5 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + 1; // random int between min(inclusive) and max(inclusive)
-export function genpass() {
+function genpass() {
     const arr = [];
     for (let i = 0; i < 256; i++) {
         arr[i] = i;
@@ -12,6 +14,7 @@ export function genpass() {
     }
     return arr;
 }
+exports.genpass = genpass;
 if (require.main === module) {
     const pass = genpass();
     console.log(Buffer.from(pass).toString('base64'));

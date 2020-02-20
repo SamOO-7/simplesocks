@@ -1,8 +1,10 @@
-import { readFileSync } from 'fs';
-export function readConfig() {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = require("fs");
+function readConfig() {
     let config;
     try {
-        const configText = readFileSync('config.json', 'utf-8');
+        const configText = fs_1.readFileSync('config.json', 'utf-8');
         config = JSON.parse(configText);
     }
     catch (e) {
@@ -11,3 +13,4 @@ export function readConfig() {
     }
     return config;
 }
+exports.readConfig = readConfig;

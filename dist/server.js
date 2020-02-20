@@ -1,9 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 // ref: https://github.com/gwuhaolin/blog/issues/12 https://gist.github.com/telamon/1127459 https://www.ietf.org/rfc/rfc1928.txt
 // test: curl https://www.google.com.tw/ --socks5 localhost:4378
-import { createServer, createConnection } from 'net';
-import { pipeline } from 'stream';
-import { createDuplexEncrypter } from './encrypt';
-import { readConfig } from './readconfig';
+const net_1 = require("net");
+const stream_1 = require("stream");
+const encrypt_1 = require("./encrypt");
+const readconfig_1 = require("./readconfig");
 const VERSION = 0x05;
 const HANDSHAKE_METHODS = {
     NOAUTH: 0x00,
@@ -24,9 +26,9 @@ const RESPONSE_REP = {
     GENERAL_FAILURE: 0x01,
     COMMAND_NOT_SUPPORTED: 0x07
 };
-const config = readConfig();
-const encrypter = createDuplexEncrypter(config.password);
-const server = createServer(async (socket) => {
+const config = readconfig_1.readConfig();
+const encrypter = encrypt_1.createDuplexEncrypter(config.password);
+const server = net_1.createServer(async (socket) => {
     encrypter(socket);
     try {
         await handleHandshake(socket);
@@ -117,12 +119,12 @@ function proxyAndRespond(socket, cmd, address, port, request) {
     return new Promise((resolve, reject) => {
         const response = Buffer.alloc(request.length);
         request.copy(response);
-        const client = createConnection(port, address, () => {
+        const client = net_1.createConnection(port, address, () => {
             // connected
             response[1] = RESPONSE_REP.SUCCEEDED;
             socket.write(response);
         });
-        pipeline(socket, client, socket, err => {
+        stream_1.pipeline(socket, client, socket, err => {
             if (err) {
                 return reject();
             }
