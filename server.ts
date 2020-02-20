@@ -1,6 +1,9 @@
 // ref: https://github.com/gwuhaolin/blog/issues/12 https://gist.github.com/telamon/1127459 https://www.ietf.org/rfc/rfc1928.txt
 // test: curl https://www.google.com.tw/ --socks5 localhost:4378
-import { createServer, Socket, createConnection } from 'net'
+import { createServer, createConnection } from 'net'
+import { Duplex, pipeline } from 'stream'
+import { createDuplexEncrypter } from './encrypt'
+import { readConfig } from './readconfig'
 
 const VERSION = 0x05
 const HANDSHAKE_METHODS = {
@@ -23,7 +26,10 @@ const RESPONSE_REP = {
 	COMMAND_NOT_SUPPORTED: 0x07
 }
 
+const config = readConfig()
+const encrypter = createDuplexEncrypter(config.password)
 const server = createServer(async socket => {
+	encrypter(socket)
 	try {
 		await handleHandshake(socket)
 		console.log('Handshake success!')
@@ -35,7 +41,7 @@ const server = createServer(async socket => {
 		console.error('Someting went wrong during the request: ', e)
 	}
 })
-function handleHandshake(socket: Socket): Promise<void> {
+function handleHandshake(socket: Duplex): Promise<void> {
 	return new Promise((resolve, reject) => {
 		socket.once('data', chunk => {
 			if (chunk[0] != VERSION) {
@@ -57,7 +63,7 @@ function handleHandshake(socket: Socket): Promise<void> {
 	})
 }
 function handleConnect(
-	socket: Socket
+	socket: Duplex
 ): Promise<{ cmd: number; address: string; port: number; request: Buffer }> {
 	return new Promise((resolve, reject) => {
 		socket.once('data', chunk => {
@@ -106,7 +112,7 @@ function readAddress(
 	return null
 }
 function proxyAndRespond(
-	socket: Socket,
+	socket: Duplex,
 	cmd: number,
 	address: string,
 	port: number,
@@ -120,14 +126,15 @@ function proxyAndRespond(
 			response[1] = RESPONSE_REP.SUCCEEDED
 			socket.write(response)
 		})
-		socket
-			.pipe(client)
-			.pipe(socket)
-			.on('end', resolve)
-		socket.on('error', reject)
-		client.on('error', reject)
+		pipeline(socket, client, socket, err => {
+			if (err) {
+				return reject()
+			}
+			resolve()
+		})
 	})
 }
 
-const PORT = process.argv[2] || 4378
-server.listen(PORT, () => console.log('Socks5 proxy listened on ' + PORT))
+server.listen(config.server_port, () =>
+	console.log('Server is listening on ' + config.server_port)
+)
