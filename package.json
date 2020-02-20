@@ -3,6 +3,9 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"license": "MIT",
+	"bin": {
+		"simplesocks": "dist/cli.js"
+	},
 	"devDependencies": {
 		"@types/node": "^13.7.2",
 		"ts-node": "^8.6.2",
