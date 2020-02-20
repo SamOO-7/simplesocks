@@ -5,7 +5,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const net_1 = require("net");
 const stream_1 = require("stream");
 const encrypt_1 = require("./encrypt");
-const readconfig_1 = require("./readconfig");
 const VERSION = 0x05;
 const HANDSHAKE_METHODS = {
     NOAUTH: 0x00,
@@ -26,22 +25,22 @@ const RESPONSE_REP = {
     GENERAL_FAILURE: 0x01,
     COMMAND_NOT_SUPPORTED: 0x07
 };
-const config = readconfig_1.readConfig();
-const encrypter = encrypt_1.createDuplexEncrypter(config.password);
-const server = net_1.createServer(async (socket) => {
-    encrypter(socket);
-    try {
-        await handleHandshake(socket);
-        console.log('Handshake success!');
-        const { cmd, address, port, request } = await handleConnect(socket);
-        console.log('Connect success!');
-        await proxyAndRespond(socket, cmd, address, port, request);
-        console.log('Request complete!');
-    }
-    catch (e) {
-        console.error('Someting went wrong during the request: ', e);
-    }
-});
+function startServer(config) {
+    const encrypter = encrypt_1.createDuplexEncrypter(config.password);
+    const server = net_1.createServer(async (socket) => {
+        encrypter(socket);
+        try {
+            await handleHandshake(socket);
+            const { cmd, address, port, request } = await handleConnect(socket);
+            await proxyAndRespond(socket, cmd, address, port, request);
+        }
+        catch (e) {
+            console.error('Someting went wrong during the request: ', e);
+        }
+    });
+    return server;
+}
+exports.startServer = startServer;
 function handleHandshake(socket) {
     return new Promise((resolve, reject) => {
         socket.once('data', chunk => {
@@ -132,4 +131,3 @@ function proxyAndRespond(socket, cmd, address, port, request) {
         });
     });
 }
-server.listen(config.server_port, () => console.log('Server is listening on ' + config.server_port));

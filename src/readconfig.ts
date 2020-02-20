@@ -1,15 +1,15 @@
 import { readFileSync } from 'fs'
 
-interface Config {
+export interface Config {
 	password: string
 	server_addr: string
 	server_port: number
 	client_port: number
 }
-export function readConfig(): Config {
+export function readConfig(configPath: string): Config {
 	let config
 	try {
-		const configText = readFileSync('config.json', 'utf-8')
+		const configText = readFileSync(configPath, 'utf-8')
 		config = JSON.parse(configText)
 	} catch (e) {
 		console.error('Failed to read config.json')

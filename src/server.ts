@@ -3,7 +3,7 @@
 import { createServer, createConnection } from 'net'
 import { Duplex, pipeline } from 'stream'
 import { createDuplexEncrypter } from './encrypt'
-import { readConfig } from './readconfig'
+import { readConfig, Config } from './readconfig'
 
 const VERSION = 0x05
 const HANDSHAKE_METHODS = {
@@ -26,21 +26,21 @@ const RESPONSE_REP = {
 	COMMAND_NOT_SUPPORTED: 0x07
 }
 
-const config = readConfig()
-const encrypter = createDuplexEncrypter(config.password)
-const server = createServer(async socket => {
-	encrypter(socket)
-	try {
-		await handleHandshake(socket)
-		console.log('Handshake success!')
-		const { cmd, address, port, request } = await handleConnect(socket)
-		console.log('Connect success!')
-		await proxyAndRespond(socket, cmd, address, port, request)
-		console.log('Request complete!')
-	} catch (e) {
-		console.error('Someting went wrong during the request: ', e)
-	}
-})
+export function startServer(config: Config) {
+	const encrypter = createDuplexEncrypter(config.password)
+	const server = createServer(async socket => {
+		encrypter(socket)
+		try {
+			await handleHandshake(socket)
+			const { cmd, address, port, request } = await handleConnect(socket)
+			await proxyAndRespond(socket, cmd, address, port, request)
+		} catch (e) {
+			console.error('Someting went wrong during the request: ', e)
+		}
+	})
+	return server
+}
+
 function handleHandshake(socket: Duplex): Promise<void> {
 	return new Promise((resolve, reject) => {
 		socket.once('data', chunk => {
@@ -142,7 +142,3 @@ function proxyAndRespond(
 		})
 	})
 }
-
-server.listen(config.server_port, () =>
-	console.log('Server is listening on ' + config.server_port)
-)
