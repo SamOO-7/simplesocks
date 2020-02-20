@@ -2,7 +2,7 @@ import { Duplex } from 'stream'
 
 export function createDuplexEncrypter(passBase64: string) {
 	const pass = Array.from(Buffer.from(passBase64, 'base64'))
-	const invertedPass = []
+	const invertedPass: number[] = []
 	for (let i = 0; i < 256; i++) {
 		invertedPass[i] = pass.indexOf(i)
 	}

@@ -2,7 +2,7 @@ const rand = (min: number, max: number) =>
 	Math.floor(Math.random() * (max - min + 1)) + 1 // random int between min(inclusive) and max(inclusive)
 
 export function genpass() {
-	const arr = []
+	const arr: number[] = []
 	for (let i = 0; i < 256; i++) {
 		arr[i] = i
 	}

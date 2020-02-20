@@ -71,7 +71,12 @@ function handleConnect(
 				socket.end()
 				return reject('Invalid version')
 			}
-			const { address, size } = readAddress(chunk, 3) // ATYP starts from index=3
+			const addr = readAddress(chunk, 3) // ATYP starts from index=3
+			if (!addr) {
+				socket.end()
+				return reject('Invalid address')
+			}
+			const { address, size } = addr
 			const port = chunk.readInt16BE(3 + size + 1) // read DST.PORT
 			const cmd = chunk[1]
 			if (cmd === CMD_TYPE.CONNECT) {
@@ -90,7 +95,10 @@ function handleConnect(
 function readAddress(
 	chunk: Buffer,
 	offset: number
-): { address: string; size: number } {
+): {
+	address: string
+	size: number
+} | null {
 	if (chunk[offset] === ADDRESS_TYPES.IPV4) {
 		// 4 bytes
 		return {
